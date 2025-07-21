@@ -25,35 +25,59 @@ A Python command-line tool to fetch research papers from PubMed and identify pap
    cd pubmed-paper-search
    ```
 
-2. Install dependencies using Poetry:
+2. Install dependencies (choose one method):
+
+   **Method A: Using Poetry (Recommended)**
    ```bash
    poetry install
+   ```
+   
+   **Method B: Using pip with virtual environment**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Mac/Linux
+   # OR venv\Scripts\activate  # On Windows
+   pip install -r requirements.txt
    ```
 
    This will set up all required dependencies including:
    - `requests` - for API calls to PubMed E-utilities
    - `click` - for command-line interface framework
 
-3. The installation will create an executable command `get-papers-list` via Poetry.
+3. **Poetry users**: The installation creates an executable command `get-papers-list`
+   **Pip users**: Use `python3 -m pubmed_search.cli` to run the tool
 
 ## Usage
 
 ### Basic Usage
 
+**With Poetry:**
 ```bash
 # Search and output to console
-get-papers-list "cancer treatment 2023"
+poetry run get-papers-list "cancer treatment 2023"
 
 # Save results to a CSV file
-get-papers-list "diabetes drug therapy" --file results.csv
+poetry run get-papers-list "diabetes drug therapy" --file results.csv
 
 # Enable debug mode for detailed information
-get-papers-list "alzheimer AND pharmaceutical" --debug --file alzheimer_papers.csv
+poetry run get-papers-list "alzheimer AND pharmaceutical" --debug --file alzheimer_papers.csv
+```
+
+**With pip (virtual environment activated):**
+```bash
+# Search and output to console
+python3 -m pubmed_search.cli "cancer treatment 2023"
+
+# Save results to a CSV file
+python3 -m pubmed_search.cli "diabetes drug therapy" --file results.csv
+
+# Enable debug mode for detailed information
+python3 -m pubmed_search.cli "alzheimer AND pharmaceutical" --debug --file alzheimer_papers.csv
 ```
 
 ### Command-line Options
 
-- **Query** (required): Search query using PubMed syntax
+- **QUERY** (required): Search query using PubMed syntax (positional argument)
 - `-h, --help`: Display usage instructions (built-in Click help)
 - `-d, --debug`: Print debug information during execution
 - `-f, --file FILENAME`: Specify filename to save results (default: output to console)
@@ -63,15 +87,28 @@ get-papers-list "alzheimer AND pharmaceutical" --debug --file alzheimer_papers.c
 
 ### Advanced Query Examples
 
+**With Poetry:**
 ```bash
 # Search with date range
-get-papers-list "cancer[MeSH] AND 2023:2024[pdat]" --file cancer_2023_2024.csv
+poetry run get-papers-list "cancer[MeSH] AND 2023:2024[pdat]" --file cancer_2023_2024.csv
 
 # Search specific journal
-get-papers-list "diabetes AND Nature[journal]" --debug
+poetry run get-papers-list "diabetes AND Nature[journal]" --debug
 
 # Complex query with multiple terms
-get-papers-list "(alzheimer OR dementia) AND drug therapy AND clinical trial" --file alzheimer_trials.csv
+poetry run get-papers-list "(alzheimer OR dementia) AND drug therapy AND clinical trial" --file alzheimer_trials.csv
+```
+
+**With pip:**
+```bash
+# Search with date range
+python3 -m pubmed_search.cli "cancer[MeSH] AND 2023:2024[pdat]" --file cancer_2023_2024.csv
+
+# Search specific journal
+python3 -m pubmed_search.cli "diabetes AND Nature[journal]" --debug
+
+# Complex query with multiple terms
+python3 -m pubmed_search.cli "(alzheimer OR dementia) AND drug therapy AND clinical trial" --file alzheimer_trials.csv
 ```
 
 ## Output Format
@@ -106,7 +143,12 @@ pubmed-paper-search/
 │   ├── pubmed_client.py    # PubMed API client and data models
 │   └── csv_writer.py       # CSV output functionality
 ├── pyproject.toml          # Poetry configuration and dependencies
+├── requirements.txt        # Pip dependencies file
 ├── README.md               # This file
+├── TESTING.md              # Detailed testing guide
+├── test_import.py          # Import validation test
+├── test_api.py             # API functionality test
+├── test_e2e.py             # End-to-end CLI test
 └── Backendtakehomeproblem.pdf  # Original requirements
 ```
 
@@ -196,11 +238,15 @@ For production use or high-volume searches, consider:
 
 ## Testing
 
-### Using Poetry (Recommended)
+### Quick Test Commands
 
-After running `poetry install`, you can test with Poetry:
+After installing dependencies, test the tool with these commands:
 
+**With Poetry:**
 ```bash
+# Test help
+poetry run get-papers-list --help
+
 # Test basic functionality
 poetry run get-papers-list "aspirin" --debug --max-results 5
 
@@ -208,16 +254,30 @@ poetry run get-papers-list "aspirin" --debug --max-results 5
 poetry run get-papers-list "covid vaccine" --file test_output.csv --debug --max-results 10
 ```
 
-### Direct Python Module Execution
-
-Alternatively, if Poetry isn't available, you can run directly:
-
+**With pip (virtual environment activated):**
 ```bash
-# Basic functionality test (requires dependencies installed)
+# Test help
+python3 -m pubmed_search.cli --help
+
+# Test basic functionality  
 python3 -m pubmed_search.cli "aspirin" --debug --max-results 5
 
 # Test file output
 python3 -m pubmed_search.cli "covid vaccine" --file test_output.csv --debug --max-results 10
+```
+
+### Using Test Scripts
+
+The project includes several test scripts:
+- `test_import.py` - Verify imports work correctly
+- `test_api.py` - Test PubMed API functionality 
+- `test_e2e.py` - End-to-end CLI testing
+
+Run them after installing dependencies:
+```bash
+python3 test_import.py
+python3 test_api.py
+python3 test_e2e.py
 ```
 
 ## Contributing
@@ -236,14 +296,32 @@ This project is developed for educational and research purposes.
 
 ### Common Issues
 
-1. **No papers found**: Try broader search terms or check PubMed query syntax
-2. **API timeouts**: Check internet connection and try with smaller result sets
-3. **Permission errors**: Ensure write permissions for output file location
-4. **Import errors**: Verify virtual environment activation and dependency installation
+1. **ModuleNotFoundError**: 
+   - Activate virtual environment: `source venv/bin/activate` or `poetry shell`
+   - Install dependencies: `pip install -r requirements.txt` or `poetry install`
+
+2. **No papers found**: 
+   - Try common search terms: "aspirin", "diabetes", "covid vaccine"
+   - Check PubMed query syntax on pubmed.ncbi.nlm.nih.gov
+   - Use smaller result sets: `--max-results 5`
+
+3. **API timeouts**: 
+   - Check internet connection
+   - Try smaller `--max-results` (3-10)
+   - Add your email: `--email your@email.com`
+
+4. **Permission errors**: 
+   - Ensure write permissions for output file location
+   - Try different path: `--file /tmp/results.csv`
+
+5. **Command not found**:
+   - Poetry users: Use `poetry run get-papers-list`
+   - Pip users: Use `python3 -m pubmed_search.cli`
 
 ### Getting Help
 
 For issues or questions:
-1. Check the debug output using the `-d` flag
+1. Check the debug output using the `-d` or `--debug` flag
 2. Verify your search query works on the PubMed website
-3. Ensure all dependencies are properly installed via Poetry
+3. Run the test scripts to identify specific issues
+4. Check the TESTING.md file for detailed troubleshooting
